@@ -35,9 +35,13 @@ if [ -z $SPACK_DIR ]; then
   source ${SPACK_ROOT}/share/spack/setup-env.sh
 
   # Install hpctoolkit dependencies
-  spack install --only dependencies hpctoolkit ^dyninst@master ^binutils@2.34+libiberty~nls 
+  # spack install --only dependencies hpctoolkit ^dyninst@master ^binutils@2.34+libiberty~nls
+  spack install --only dependencies hpctoolkit@2021.05.15 ^dyninst@12.3.0 ^binutils@2.35+libiberty~nls # ^boost@1.83.0 ^libtool@2.4.6
   spack install libmonitor@master+dlopen+hpctoolkit
-  spack install mbedtls gotcha
+  # spack install mbedtls gotcha
+  # try fix:
+  spack install mbedtls@3.3.0%gcc@12.3.0+pic build_system=makefile build_type=Release libs=static arch=linux-ubuntu22.04-icelake gotcha@1.0.4
+
 
   # Find spack dir
   B=$(spack find --path boost | tail -n 1 | cut -d ' ' -f 3)
@@ -54,7 +58,8 @@ mkdir build
 cd build
 ../configure --prefix=$DIR/hpctoolkit --with-cuda=$CUDA_PATH \
   --with-cupti=$CUPTI_PATH --with-spack=$SPACK_DIR
-make install -j8
+# make install -j8
+make install -j8 &> log.txt
 
 echo "Install in "$DIR"/hpctoolkit"
 
