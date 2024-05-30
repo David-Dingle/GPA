@@ -1,0 +1,412 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!-- Manual page created with latex2man on Thu May 30 10:13:36 AM PDT 2024 --
+-- Author of latex2man: Juergen.Vollmer@informatik-vollmer.de --
+-- NOTE: This file is generated, DO NOT EDIT. -->
+<html>
+<head><title>HPCSTRUCT</title></head>
+<body bgcolor="white">
+<h1 align=center>
+hpcstruct:<br>
+Recovery of Static Program Structure 
+</h1>
+<h4 align=center>The HPCToolkit Performance Tools </h4>
+<h4 align=center>2020/07/15</h4>
+<h4 align=center>Version 2020.07-develop</h4>
+<p>
+<tt>hpcstruct</tt>
+- recovers the static program structure of a CPU or GPU binary, including procedures, inlined functions, loops, and source lines 
+<p>
+See <a href="hpctoolkit.html"><em>hpctoolkit</em>(1)
+</a>for an overview of <strong>HPCToolkit</strong>.
+<p>
+<h3>Table of Contents</h3>
+<ul>
+<li><a href="#section_1">Synopsis </a></li>
+<li><a href="#section_2">Description </a></li>
+<li><a href="#section_3">Arguments </a>
+<ul>
+<li><a href="#section_4">Options: Informational </a></li>
+<li><a href="#section_5">Options: Parallel Usage </a></li>
+<li><a href="#section_6">Options: Structure recovery </a></li>
+<li><a href="#section_7">Options: Output </a></li>
+<li><a href="#section_8">Options for Developers: </a></li>
+</ul>
+<li><a href="#section_9">Examples </a></li>
+<li><a href="#section_10">Notes </a></li>
+<li><a href="#section_11">See Also </a></li>
+<li><a href="#section_12">Version </a></li>
+<li><a href="#section_13">License and Copyright </a></li>
+<li><a href="#section_14">Authors </a></li>
+</ul>
+<p>
+<h2><a name="section_1">Synopsis</a></h2>
+
+<p>
+<tt>hpcstruct</tt>
+[<b>options</b>]
+<i>binary</i>
+<p>
+<tt>hpcstruct</tt>
+[<b>options</b>]
+<i>measurement directory of GPU-accelerated application</i>
+<p>
+<h2><a name="section_2">Description</a></h2>
+
+<p>
+Given an application binary, a shared library, or a GPU binary, <tt>hpcstruct</tt>
+recovers the program structure of its object code by analyzing available information 
+about loop nests, inlined functions, and the mapping between machine instructions and 
+source lines. Program structure is a 
+mapping of a program's object code to its static source-level structure. 
+<p>
+When analyzing a CPU binary <i>b</i>,
+by default, 
+<tt>hpcstruct</tt>
+writes its results to the file 'basename(<i>b</i>).hpcstruct'.
+To improve attribution of performance measurements to program source code, one can 
+pass one or more program structure files (e.g., for an executable and/or 
+one or more shared libraries) to HPCToolkit's analysis tool <tt>hpcprof</tt>
+along with one or more HPCToolkit performance measurement directories. 
+<p>
+During execution of a GPU-accelerated application on an NVIDIA GPU, HPCToolkit 
+records NVIDIA 'cubin' GPU binaries in the application's measurement directory. 
+To attribute performance to GPU functions in a GPU-accelerated application, one 
+should apply <tt>hpcstruct</tt>
+to the application's HPCToolkit measurement directory to 
+analyze all GPU binaries recorded within. When analyzing a measurement directory 
+that includes GPU binaries, any program structure files produced will be recorded 
+inside the measurement directory. When <tt>hpcprof</tt>
+is applied to a measurement 
+directory that contains program structure files for GPU binaries, these program 
+structure files will be used to help attribute any GPU performance measurements. 
+<p>
+<tt>hpcstruct</tt>
+is designed primarily for highly optimized binaries created from 
+C, C++, Fortran, and CUDA source code. Because <tt>hpcstruct</tt>'s
+algorithms exploit a 
+binary's debugging information, for best results, binary should be compiled 
+with standard debugging information or, at a minimum, line map information. 
+Note: although a CPU or GPU binary may be optimized, it must also be 
+compiled with line mappings for the results to be useful, e.g., normally using the -g 
+flag when compiling CPU binaries. 
+<p>
+For faster analysis of large binaries or many GPU binaries, we recommend using 
+the -j option to employ multithreading. As many as 32 cores can be used profitably 
+to analyze large CPU or GPU binaries in the measurements directory for a 
+GPU-accelerated application. 
+<p>
+<h2><a name="section_3">Arguments</a></h2>
+
+<p>
+<dl compact>
+<dt><i>binary</i>
+</dt>
+<dd> File containing an executable or dynamically-linked shared library. 
+Note that <tt>hpcstruct</tt>
+does not recover program structure for libraries that <i>binary</i>
+depends on. 
+To recover that structure, run <tt>hpcstruct</tt>
+on each dynamically-linked shared library 
+or relink your program with static versions of the libraries. 
+<p>
+</dd>
+<dt><i>measurement directory of GPU-accelerated application</i>
+</dt>
+<dd> 
+A measurement directory of a GPU-accelerated application that employed NVIDIA GPUs. 
+When a GPU-accelerated application runs on an NVIDIA GPU, its 'cubin' GPU binaries are recorded into 
+HPCToolkit's measurement directory. 
+Applying <tt>hpcstruct</tt>
+to a measurement directory analyzes any GPU binaries recorded 
+in the measurement directory during execution. 
+<p>
+</dd>
+</dl>
+<p>
+Default values for an option's optional arguments are shown in {}. 
+<p>
+<h4><a name="section_4">Options: Informational</a></h4>
+
+<p>
+<dl compact>
+<p>
+<dt><b>-V</b>, <b>--version</b>
+</dt>
+<dd> 
+Print version information. 
+<p>
+</dd>
+<dt><b>-h</b>, <b>--help</b>
+</dt>
+<dd> 
+Print help message. 
+<p>
+</dd>
+</dl>
+<p>
+<h4><a name="section_5">Options: Parallel Usage</a></h4>
+
+<dt><b>-j</b> <i>num</i>, <b>--jobs</b> <i>num</i>
+</dt>
+<dd> 
+Use <i>num</i>
+threads for all phases in <tt>hpcstruct</tt>.
+{1} 
+<p>
+</dd>
+<dt><b>--gpu-size</b> <i>n</i>
+</dt>
+<dd> 
+Size (bytes) of a GPU binary that will cause <tt>hpcstruct</tt>
+to use <i>num</i>
+threads to analyze a binary in parallel. 
+GPU binaries with fewer than <i>n</i>
+bytes will be analyzed 
+concurrently, <i>num</i>
+at a time. {100000000} 
+<p>
+<h4><a name="section_6">Options: Structure recovery</a></h4>
+
+<p>
+<dl compact>
+<p>
+<dt><b>--gpucfg</b> <i>yes/no</i>
+</dt>
+<dd> 
+Compute loop nesting structure for GPU machine code. Currently, 
+this applies only to NVIDIA CUDA binaries (cubins). Loop nesting 
+structure is only useful with instruction-level measurements 
+collected using PC sampling. {no} 
+<p>
+</dd>
+<dt><b>-I</b> <i>path</i>, <b>--include</b> <i>path</i>
+</dt>
+<dd> 
+Use <i>path</i>
+when resolving source file names. 
+This option is useful when a compiler records the same filename in different ways within the symbolic information. 
+(Yes, this does happen.) 
+For a recursive search, append a '+' after the last slash, e.g., <tt>/mypath/+</tt>.
+This option may appear multiple times. 
+<p>
+</dd>
+<dt><b>-R</b> <i>'old-path=new-path'</i>, <b>--replace-path</b> <i>'old-path=new-path'</i>
+</dt>
+<dd> 
+Replace instances of <i>old-path</i>
+with <i>new-path</i>
+in all paths with <i>old-path</i>
+is a prefix 
+(e.g., a profile's load map and source code). 
+Use <tt>'\'</tt> to escape instances of '=' within specified paths. 
+This option may appear multiple times. 
+<p>
+Use this when a profile or executable references files that have been relocated, 
+such as might occur with a file system change. 
+<p>
+</dd>
+</dl>
+<p>
+<h4><a name="section_7">Options: Output</a></h4>
+
+<p>
+<dl compact>
+<p>
+<dt><b>-o</b> <i>file</i>, <b>--output</b> <i>file</i>
+</dt>
+<dd> 
+Write results to <i>file</i>.
+{<i>basename(binary)</i><tt>.hpcstruct</tt>}
+<p>
+</dd>
+</dl>
+<p>
+<h4><a name="section_8">Options for Developers:</a></h4>
+
+<p>
+<dl compact>
+<dt><b>--jobs-struct</b> <i>num</i>
+</dt>
+<dd> 
+Use num threads for the program structure analysis phase of <tt>hpcstruct</tt>.
+<p>
+</dd>
+<dt><b>--jobs-parse</b> <i>num</i>
+</dt>
+<dd> 
+Use num threads for the parse phase of <tt>hpcstruct</tt>.
+<p>
+</dd>
+<dt><b>--jobs-symtab</b> <i>num</i>
+</dt>
+<dd> 
+Use num threads for the symbol table analysis phase of <tt>hpcstruct</tt>.
+<p>
+</dd>
+<dt><b>--show-gaps</b>
+</dt>
+<dd> 
+Developer option to 
+write a text file describing all the "gaps" found by <tt>hpcstruct</tt>,
+i.e. address regions not identified as belonging to a code or data segment 
+by the ParseAPI parser used to analyze application executables. 
+The file is named <em>outfile</em><tt>.gaps</tt>,
+which by default is 
+<em>appname</em><tt>.hpcstruct.gaps</tt>.
+<p>
+</dd>
+<dt><b>--time</b>
+</dt>
+<dd> 
+Display the time and space usage per phase in <tt>hpcstruct</tt>.
+<p>
+</dd>
+</dl>
+<p>
+<h2><a name="section_9">Examples</a></h2>
+
+<p>
+<ol compact>
+<li value =1> 
+Assume we have used HPCToolkit to collect performance measurements for the (optimized) CPU binary 
+<tt>sweep3d</tt>
+and that performance measurement data for the application is in the measurement 
+directory <tt>hpctoolkit-sweep3d-measurements</tt>.
+Assume that <tt>sweep3d</tt>
+was compiled with debugging information using the -g compiler flag in addition to any 
+optimization flags. 
+We wish to recover program structure in <tt>sweep3d</tt>
+for use with <a href="hpcprof.html"><em>hpcprof</em>(1)
+</a>.
+To do this, execute: 
+<p>
+<pre>
+    hpcstruct sweep3d
+</pre>
+<p>
+By default, the output is placed in a file named <tt>sweep3d.hpcstruct</tt>.
+<p>
+To use the program structure file to help interpret performance measurements in <tt>hpctoolkit-sweep3d-measurements</tt>,
+provide the program structure file to <tt>hpcprof</tt>
+using the -S option, as shown below: 
+<p>
+<pre>
+    hpcprof -S sweep3d.hpcstruct hpctoolkit-sweep3d-measurements
+</pre>
+<p>
+Additional program structure files for any shared libraries used by <tt>sweep3d</tt>
+can be passed to <tt>hpcprof</tt>
+using additional -S options. 
+<p>
+</li>
+<li value =2> 
+Assume we have used HPCToolkit to collect performance measurements for the (optimized) GPU-accelerated 
+CPU binary <tt>laghos</tt>,
+which offloaded computation onto one or more NVIDIA GPUs. 
+Assume that performance measurement data for the application is in the measurement 
+directory <tt>hpctoolkit-laghos-measurements</tt>.
+<p>
+Assume that the CPU code for <tt>laghos</tt>
+was compiled with debugging information using the -g compiler flag in addition to any 
+optimization flags and that the GPU code the application contains was compiled with line map information (-lineinfo). 
+<p>
+To recover program structure information for the laghost CPU binary, execute: 
+<p>
+<pre>
+    hpcstruct laghos
+</pre>
+<p>
+By default, the output is placed in a file named <tt>laghos.hpcstruct</tt>.
+<p>
+To recover program structure information for the GPU binaries used by laghos, execute: 
+<p>
+<pre>
+    hpcstruct hpctoolkit-laghos-measurements
+</pre>
+<p>
+The measurement directory will be augmented with program structure information recovered for the GPU binaries. 
+<p>
+As shown below, one can provide the program structure files to <tt>hpcprof</tt>
+by passing the 
+CPU program structure file explicitly using the -S argument and passing the program structure files for the GPU binaries 
+implicitly by passing the measurement directory. 
+<p>
+<pre>
+    hpcprof -S laghos.hpcstruct hpctoolkit-laghos-measurements
+</pre>
+<p>
+</li>
+</ol>
+<p>
+<h2><a name="section_10">Notes</a></h2>
+
+<p>
+<ol compact>
+<p>
+<li value =1>For best results, an application binary should be compiled with debugging information. 
+To generate debugging information while also enabling optimizations, 
+use the appropriate variant of <tt>-g</tt> for the following compilers: 
+<ul compact>
+<li>GNU compilers: <tt>-g</tt> 
+</li>
+<li>Intel compilers: <tt>-g -debug inline_debug_info</tt> 
+</li>
+<li>IBM compilers: <tt>-g -fstandalone-debug -qfulldebug -qfullpath</tt> 
+</li>
+<li>PGI compilers: <tt>-gopt</tt> 
+</li>
+<li>NVIDIA's nvcc: <br>
+ 
+&nbsp;&nbsp;&nbsp;&nbsp;<tt>-lineinfo</tt> provides line mappings for optimized or unoptimized code<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<tt>-G</tt> provides line mappings and inline information for unoptimized code 
+</li>
+</ul>
+<p>
+</li>
+<li value =2>While <tt>hpcstruct</tt> attempts to guard against inaccurate debugging information,
+some compilers (notably PGI's) often generate invalid and inconsistent debugging information. 
+Garbage in; garbage out. 
+<p>
+</li>
+<li value =3>C++ mangling is compiler specific. On non-GNU platforms, <tt>hpcstruct</tt>
+tries both platform's and GNU's demangler. 
+<p>
+</li>
+</ol>
+<p>
+<h2><a name="section_11">See Also</a></h2>
+
+<p>
+<a href="hpctoolkit.html"><em>hpctoolkit</em>(1)
+</a>.
+<p>
+<h2><a name="section_12">Version</a></h2>
+
+<p>
+Version: 2020.07-develop
+<p>
+<h2><a name="section_13">License and Copyright</a></h2>
+
+<p>
+<dl compact>
+<dt>Copyright</dt>
+<dd> &copy; 2002-2020, Rice University. 
+</dd>
+<dt>License</dt>
+<dd> See <tt>README.License</tt>.
+</dd>
+</dl>
+<p>
+<h2><a name="section_14">Authors</a></h2>
+
+<p>
+Rice University's HPCToolkit Research Group <br>
+
+Email: <a href ="mailto:hpctoolkit-forum =at= rice.edu"><tt>hpctoolkit-forum =at= rice.edu</tt></a>
+<br>
+WWW: <a href ="http://hpctoolkit.org"><tt>http://hpctoolkit.org</tt></a>.
+<p>
+</body>
+</html>
+<!-- NOTE: This file is generated, DO NOT EDIT. -->

@@ -1,0 +1,101 @@
+#!/bin/bash
+
+usage() {
+  cat <<EOF
+Usage:
+    gpa [profiling options] [executable] [executable options]
+    profiling options:
+    -j <cpu-threads>
+    number of analysis threads
+    -inst
+    instrumentation based profiling
+    -h help
+    -arch <gpu-arch>
+    default: V100 
+    -v output logs in gpa.log
+EOF
+  exit 0
+}
+
+while test "x$1" != x
+do
+  arg="$1" ; shift
+  case "$arg" in
+    -v)
+      export GPA_VERBOSE=1
+      ;;
+    -j)
+      export GPA_THREADS=$1
+      shift
+      ;;
+    -h)
+      usage
+      exit
+      ;;
+    -inst)
+      export GPA_INST=1
+      ;;
+    -arch)
+      export GPA_ARCH=$1
+      shift
+      ;;
+    * )
+      set -- "$arg" "$@"
+      break
+      ;;
+  esac
+done
+
+GPA_EXEC=$1
+GPA_ARGS="${@:2}"
+
+if [ -z "$GPA_EXEC" ]; then
+  echo "Empty executable"
+  exit
+fi
+
+if [ -z "$GPA_THREADS" ]
+then
+  export GPA_THREADS=1
+fi
+
+if [ -z "$GPA_ARCH" ]
+then
+  export GPA_ARCH=V100
+fi
+
+if [ ! -z "$GPA_VERBOSE" ]; then
+  export GPA_REDIRECT=./gpa.log
+else
+  export GPA_REDIRECT=/dev/null
+fi
+
+MEASUREMENTS=gpa-measurements
+DATABASE=gpa-database
+echo "Make sure "$MEASUREMENTS" and "$DATABASE" is clean"
+rm -rf $MEASUREMENTS
+rm -rf $DATABASE
+
+echo "Profiling: collect pc sampling performance metrics"
+
+hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
+
+if [ ! -z "$GPA_INST" ]
+then
+  echo "Profiling: collect instrumentation-based performance metrics"
+  hpcrun -e gpu=nvidia,inst -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  hpcrun -e gpu=nvidia,inst_branch -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  hpcrun -e gpu=nvidia,inst_global -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  hpcrun -e gpu=nvidia,inst_shared -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+fi
+
+echo "Parsing: parse CPU and GPU binaries"
+hpcstruct --gpu-size 100000 --gpucfg yes -j $GPA_THREADS $MEASUREMENTS &>>$GPA_REDIRECT
+hpcstruct --gpu-size 100000 -j $GPA_THREADS $GPA_EXEC -o $GPA_EXEC".hpcstruct" &>>$GPA_REDIRECT
+
+echo "Analyzing: match metrics with advice"
+hpcprof --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
+
+echo "Output advice in "$DATABASE"/gpa.advice"
+
+echo "Done..."
