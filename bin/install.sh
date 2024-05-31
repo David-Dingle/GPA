@@ -36,7 +36,7 @@ if [ -z $SPACK_DIR ]; then
 
   # Install hpctoolkit dependencies
   # spack install --only dependencies hpctoolkit ^dyninst@master ^binutils@2.34+libiberty~nls
-  spack install --only dependencies hpctoolkit@2022.05.15 ^dyninst@12.3.0 ^binutils@2.35+libiberty~nls # ^boost@1.83.0 ^libtool@2.4.6
+  spack install --only dependencies hpctoolkit@2021.05.15 ^dyninst@12.3.0 ^binutils@2.35+libiberty~nls # ^boost@1.83.0 ^libtool@2.4.6
   spack install libmonitor@master+dlopen+hpctoolkit
   # spack install mbedtls gotcha
   # try fix:
