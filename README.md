@@ -10,9 +10,9 @@ GPA is a performance advisor for NVIDIA GPUs that suggests potential code optimi
 ```bash
 git clone --recursive https://github.com/Jokeren/GPA.git && cd GPA
 ./bin/install.sh
-export DrGPUM_PATH=$(pwd)/gpa
-export PATH=${DrGPUM_PATH}/bin:$PATH
-export PATH=${DrGPUM_PATH}/hpctoolkit/bin:$PATH
+export GPA_PATH=$(pwd)/gpa
+export PATH=${GPA_PATH}/bin:$PATH
+export PATH=${GPA_PATH}/hpctoolkit/bin:$PATH
 ./bin/bench.sh rodinia/bfs
 ```
 
