@@ -9,6 +9,7 @@ GPA is a performance advisor for NVIDIA GPUs that suggests potential code optimi
 
 ```bash
 git clone --recursive https://github.com/David-Dingle/GPA.git && cd GPA
+export PYTORCH_DIR=path_to_pytorch/torch
 ./bin/install.sh
 export GPA_PATH=$(pwd)/gpa
 export PATH=${GPA_PATH}/bin:$PATH
