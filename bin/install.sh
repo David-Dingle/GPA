@@ -51,12 +51,23 @@ fi
 CUDA_PATH=/usr/local/cuda/
 CUPTI_PATH=$CUDA_PATH/extras/CUPTI/
 
+# Python version for torch monitor
+PY_VERSION=3.11
+spack install python@$PY_VERSION
+
+# Install torch monitor
+mkdir $DIR/torch-monitor
+cd $DIR/torch-monitor
+cmake $SOURCE_DIR/torch-monitor -DTORCH_DIR=$PYTORCH_DIR
+make DESTDIR=$DIR/torch-monitor -j16 install
+
 # install hpctoolkit
 cd $SOURCE_DIR
 cd hpctoolkit
 mkdir build
 cd build
 ../configure --prefix=$DIR/hpctoolkit --with-cuda=$CUDA_PATH \
+  --with-torch-monitor=$DIR/torch-monitor/usr/local \
   --with-cupti=$CUPTI_PATH --with-spack=$SPACK_DIR --enable-develop
 # make install -j8
 make install -j8 &> log.txt

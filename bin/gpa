@@ -79,8 +79,11 @@ rm -rf $DATABASE
 echo "Profiling: collect pc sampling performance metrics"
 # Fix PC sampling error: export CUPTI libs
 export LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64/:$LD_LIBRARY_PATH 
+export LD_LIBRARY_PATH=/home/xjding/Projects/GPA/GPA/gpa/torch-monitor/usr/local/lib/:$LD_LIBRARY_PATH
 
 hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
+# hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
+
 
 if [ ! -z "$GPA_INST" ]
 then
@@ -89,6 +92,10 @@ then
   hpcrun -e gpu=nvidia,inst_branch -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
   hpcrun -e gpu=nvidia,inst_global -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
   hpcrun -e gpu=nvidia,inst_shared -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # hpcrun -e gpu=nvidia,inst -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # hpcrun -e gpu=nvidia,inst_branch -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # hpcrun -e gpu=nvidia,inst_global -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # hpcrun -e gpu=nvidia,inst_shared -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
 fi
 
 echo "Parsing: parse CPU and GPU binaries"
@@ -96,7 +103,7 @@ hpcstruct --gpu-size 100000 --gpucfg yes -j $GPA_THREADS $MEASUREMENTS &>>$GPA_R
 hpcstruct --gpu-size 100000 -j $GPA_THREADS $GPA_EXEC -o $GPA_EXEC".hpcstruct" &>>$GPA_REDIRECT
 
 echo "Analyzing: match metrics with advice"
-hpcprof --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
+# hpcprof --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
 
 echo "Output advice in "$DATABASE"/gpa.advice"
 

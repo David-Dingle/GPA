@@ -4,3 +4,6 @@
 [submodule "GPA-Benchmark"]
 	path = GPA-Benchmark
 	url = https://github.com/Jokeren/GPA-Benchmark.git
+[submodule "torch-monitor"]
+	path = torch-monitor
+	url = https://github.com/Jokeren/torch-monitor.git
