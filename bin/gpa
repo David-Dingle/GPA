@@ -83,26 +83,26 @@ export LD_LIBRARY_PATH=/home/xjding/Projects/GPA/GPA/gpa/torch-monitor/usr/local
 export LD_LIBRARY_PATH=/home/xjding/anaconda3/envs/new_torch_monitor/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/home/xjding/anaconda3/envs/new_torch_monitor/lib/python3.11/site-packages/torch:$LD_LIBRARY_PATH
 
-time hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
-# hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
+# time hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
+time hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
 
 
 if [ ! -z "$GPA_INST" ]
 then
   echo "Profiling: collect instrumentation-based performance metrics"
-  time hpcrun -e gpu=nvidia,inst -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
-  time hpcrun -e gpu=nvidia,inst_branch -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
-  time hpcrun -e gpu=nvidia,inst_global -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
-  time hpcrun -e gpu=nvidia,inst_shared -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
-  # hpcrun -e gpu=nvidia,inst -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
-  # hpcrun -e gpu=nvidia,inst_branch -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
-  # hpcrun -e gpu=nvidia,inst_global -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
-  # hpcrun -e gpu=nvidia,inst_shared -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # time hpcrun -e gpu=nvidia,inst -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # time hpcrun -e gpu=nvidia,inst_branch -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # time hpcrun -e gpu=nvidia,inst_global -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  # time hpcrun -e gpu=nvidia,inst_shared -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  time hpcrun -e gpu=nvidia,inst -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  time hpcrun -e gpu=nvidia,inst_branch -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  time hpcrun -e gpu=nvidia,inst_global -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
+  time hpcrun -e gpu=nvidia,inst_shared -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>>$GPA_REDIRECT
 fi
 
 echo "Parsing: parse CPU and GPU binaries"
-# time hpcstruct --gpu-size 100000 --gpucfg yes -j $GPA_THREADS $MEASUREMENTS &>>$GPA_REDIRECT
-time hpcstruct --gpu-size 100000 -j $GPA_THREADS $MEASUREMENTS &>>$GPA_REDIRECT
+time hpcstruct --gpu-size 100000 --gpucfg yes -j $GPA_THREADS $MEASUREMENTS &>>$GPA_REDIRECT
+# time hpcstruct --gpu-size 100000 -j $GPA_THREADS $MEASUREMENTS &>>$GPA_REDIRECT
 time hpcstruct --gpu-size 100000 -j $GPA_THREADS $GPA_EXEC -o $GPA_EXEC".hpcstruct" &>>$GPA_REDIRECT
 
 echo "Analyzing: match metrics with advice"
@@ -110,7 +110,7 @@ echo "Analyzing: match metrics with advice"
 
 # hpcstruct /home/xjding/anaconda3/envs/new_torch_monitor/lib/python3.11/site-packages/torch/lib/libc10.so
 # time hpcprof -S ./libc10.so.hpcstruct --gpu-arch A100 -o ./gpa-database ./gpa-measurements &>>./gpa.log
-time hpcprof -S ./libc10.so.hpcstruct --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
+time hpcprof -S libc10.so.hpcstruct -S python3.11.hpcstruct -S libmonitor.so.0.0.0.hpcstruct -S libhpcrun.so.0.0.0.hpcstruct -S libcupti.so.2023.2.0.hpcstruct -S libcuda.so.535.183.01.hpcstruct -S libcudart-d0da41ae.so.11.0.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libtorch_cpu.so.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libtorch_cuda.so.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libtorch_python.so.hpcstruct --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
 
 echo "Output advice in "$DATABASE"/gpa.advice"
 

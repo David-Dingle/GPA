@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- -*- coding: utf-8 -*- -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	  "http://www.w3.org/TR/html4/loose.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <!-- meta http-equiv="Content-Type" content="text/html; charset=utf-8" -->
+  <link rel="stylesheet" type="text/css" href="style/style.css" />
+
+  <title>Current Spack Issues for HPCToolkit</title>
+</head>
+
+<body>
+
+<!-- HPCToolkit Image (height = 71 pixels) -->
+<img style="position: absolute; top: 0px; left: 0px" src="style/header.gif" alt="hpctoolkit" />
+<div style="position: relative; margin-top: 60px; width: 100%; text-align: right;">
+<p style="margin: 0px; font-size: small;">
+  [ <a href="index.html">Home</a>
+  | <a href="overview.html">Overview</a>
+  | <a href="publications.html">Publications</a> ]
+  &bull;
+  [ <a href="examples.html">Examples</a> ]
+  &bull;
+  [ <a href="software.html">Software/Downloads</a>
+  | <a href="documentation.html">Documentation/Questions</a> ]
+  &bull;
+  [ <a href="info-people.html">People</a> |
+    <a href="info-acks.html">Acks</a> ]
+</p>
+</div>
+<div style="width: 100%;">
+  <hr />
+</div>
+
+<h1 class="settitle" align="center">Current Spack Issues for HPCToolkit</h1>
+
+
+<a name="SEC_Contents"></a>
+<h2 class="contents-heading">Table of Contents</h2>
+
+<div class="contents">
+<ul class="no-bullet">
+<li><a name="toc-Introduction" href="#Introduction">1 Introduction</a></li>
+<li><a name="toc-Current-Issues" href="#Current-Issues">2 Current Issues</a>
+<ul class="no-bullet">
+  <li><a name="toc-_00282019_002d08_002d28_0029-Cray-front_002dend-compilers" href="#g_t_00282019_002d08_002d28_0029-Cray-front_002dend-compilers">2.1 (2019-08-28) Cray front-end compilers</a></li>
+</ul></li>
+<li><a name="toc-Recently-Resolved-Issues" href="#Recently-Resolved-Issues">3 Recently Resolved Issues</a>
+<ul class="no-bullet">
+  <li><a name="toc-_00282020_002d03_002d27_0029-Intel_002dTBB-checksums-don_0027t-match" href="#g_t_00282020_002d03_002d27_0029-Intel_002dTBB-checksums-don_0027t-match">3.1 (2020-03-27) Intel-TBB checksums don&rsquo;t match</a></li>
+</ul></li>
+<li><a name="toc-General-Problems" href="#General-Problems">4 General Problems</a>
+<ul class="no-bullet">
+  <li><a name="toc-Unable-to-fetch" href="#Unable-to-fetch">4.1 Unable to fetch</a></li>
+  <li><a name="toc-Connection-timeout" href="#Connection-timeout">4.2 Connection timeout</a></li>
+  <li><a name="toc-New-version-breaks-the-build" href="#New-version-breaks-the-build">4.3 New version breaks the build</a></li>
+  <li><a name="toc-Spack-core-breaks-the-build" href="#Spack-core-breaks-the-build">4.4 Spack core breaks the build</a></li>
+</ul></li>
+<li><a name="toc-Long-Term-Issues" href="#Long-Term-Issues">5 Long Term Issues</a>
+<ul class="no-bullet">
+  <li><a name="toc-Boost-1_002e68_002e0" href="#Boost-1_002e68_002e0">5.1 Boost 1.68.0</a></li>
+  <li><a name="toc-Elfutils-0_002e176" href="#Elfutils-0_002e176">5.2 Elfutils 0.176</a></li>
+</ul></li>
+
+</ul>
+</div>
+
+
+
+<a name="Introduction"></a>
+<h3 class="section">1 Introduction</h3>
+
+<p>Spack is a moving target and receives multiple commits per day.
+Normally, HPCToolkit will build and run successfully with the latest
+version of all of its prerequisite packages, but sometimes not.  This
+page covers the current known issues where HPCToolkit fails to build
+with the latest version of spack.  The main build directions are at:
+</p>
+<p><a href="software-instructions.html">software-instructions.html</a>
+</p>
+<p>Report problems to <code>hpctoolkit-forum at rice dot edu</code>.  But before
+reporting a problem, first try the versions recommended in the
+<code>packages.yaml</code> file in the <code>spack</code> subdirectory of the
+hpctoolkit repository.  And always check the latest version of this file
+on the hpctoolkit web site.
+</p>
+<div class="example">
+<pre class="example"><a href="http://hpctoolkit.org/spack-issues.html">http://hpctoolkit.org/spack-issues.html</a>
+</pre></div>
+
+<p>Last revised: June 17, 2020.
+</p>
+
+<a name="Current-Issues"></a>
+<h3 class="section">2 Current Issues</h3>
+
+<a name="g_t_00282019_002d08_002d28_0029-Cray-front_002dend-compilers"></a>
+<h4 class="subsection">2.1 (2019-08-28) Cray front-end compilers</h4>
+
+<p><code>Spack compiler find</code> is currently broken for detecting the
+front-end compilers on Cray that HPCToolkit uses.  Normally, you would
+load a module for gcc and run <code>spack compiler find</code> and spack would
+add that compiler to <code>compilers.yaml</code>, but this currently does not
+work.
+</p>
+<p><b>Workaround:</b> If you have a working <code>compiler:</code> entry for a
+front-end GNU compiler on Cray, then that will continue to work.  If
+not, then you will have to add one manually.  For example, this is an
+entry for the <code>gcc/8.3.0</code> module on theta at ANL.  Note that the
+front-end operating_system is something like <code>sles12</code> (not
+<code>cnl6</code>), and the front-end target is <code>x86_64</code> (not
+<code>mic_knl</code>).  Your versions may differ.
+</p>
+<div class="example">
+<pre class="example">- compiler:
+    environment: {}
+    flags: {}
+    modules:
+    - PrgEnv-gnu/6.0.5
+    - gcc/8.3.0
+    - craype/2.6.1
+    - cray-mpich/7.7.10
+    operating_system: sles12
+    paths:
+      cc:  /opt/gcc/8.3.0/bin/gcc
+      cxx: /opt/gcc/8.3.0/bin/g++
+      f77: /opt/gcc/8.3.0/bin/gfortran
+      fc:  /opt/gcc/8.3.0/bin/gfortran
+    spec: gcc@8.3.0
+    target: x86_64
+</pre></div>
+
+<p><b>Note:</b> Be sure to fill in the <code>modules:</code> field with all four
+modules.
+</p>
+
+<a name="Recently-Resolved-Issues"></a>
+<h3 class="section">3 Recently Resolved Issues</h3>
+
+<a name="g_t_00282020_002d03_002d27_0029-Intel_002dTBB-checksums-don_0027t-match"></a>
+<h4 class="subsection">3.1 (2020-03-27) Intel-TBB checksums don&rsquo;t match</h4>
+
+<p>Intel recently moved the TBB project on GitHub to a new repository,
+<code>oneAPI-SRC/oneTBB</code>.  When downloading the intel-tbb tar file,
+github makes the tar file on the fly, and this includes the new
+top-level directory name (oneTBB).  The contents of the tar file are the
+same, but the new directory name is enough to invalidate the spack
+checksum.
+</p>
+<p><b>Fixed:</b> The new checksums were added to spack in commit
+<a href="https://github.com/spack/spack/pull/15675">16f104aafe2b</a>
+on 2020-03-27.  So, if you update your spack repository after this
+commit, then the checksums will match.
+</p>
+<p><b>Workaround:</b> If you have an older spack repository, then you will
+need to disable verifying checksums.
+</p>
+<div class="example">
+<pre class="example">spack install --no-checksum intel-tbb
+</pre></div>
+
+
+<a name="General-Problems"></a>
+<h3 class="section">4 General Problems</h3>
+
+<p>These are general problems that arise from time to time.
+</p>
+<a name="Unable-to-fetch"></a>
+<h4 class="subsection">4.1 Unable to fetch</h4>
+
+<p>Sometimes spack fails to download the source file(s) for some package
+and dies with a message similar to this.
+</p>
+<div class="example">
+<pre class="example">==&gt; Fetching from https://ftpmirror.gnu.org/m4/m4-1.4.18.tar.gz failed.
+==&gt; Error: FetchError: All fetchers failed for m4-1.4.18-vorbvkcjfac43b7vuswsvnm6xe7w7or5
+</pre></div>
+
+<p>This problem is usually temporary and the solution is to either wait a
+few minutes or an hour and try again, or else download the file manually
+and put it into a spack mirror.
+</p>
+<a name="Connection-timeout"></a>
+<h4 class="subsection">4.2 Connection timeout</h4>
+
+<p>Another way fetch can fail is with a connection timeout.  Some sites,
+especially sourceforge are often slow to connect.  If this happens, then
+increase the connection timeout in <code>config.yaml</code> to 30 or 60
+seconds (default is 10 seconds).
+</p>
+<a name="New-version-breaks-the-build"></a>
+<h4 class="subsection">4.3 New version breaks the build</h4>
+
+<p>Sometimes the latest version of some package breaks the build.  This has
+happened a couple of times where a new version of Boost has broken the
+build for Dyninst.  The solution is to revert the package to an earlier
+version until the rest of the code catches up.
+</p>
+<a name="Spack-core-breaks-the-build"></a>
+<h4 class="subsection">4.4 Spack core breaks the build</h4>
+
+<p>Sometimes but rarely, something in the spack core will change or break
+the code in some <code>package.py</code> file.  The solution is to look
+through the spack git log and revert the repository to a recent commit
+before the breakage.
+</p>
+
+<a name="Long-Term-Issues"></a>
+<h3 class="section">5 Long Term Issues</h3>
+
+<a name="Boost-1_002e68_002e0"></a>
+<h4 class="subsection">5.1 Boost 1.68.0</h4>
+
+<p>Avoid boost version 1.68.0, it breaks the build for hpctoolkit.  Version
+1.70.0 works with the latest version of dyninst (10.1.0), or else 1.66.0
+is good and works with all versions of dyninst.
+</p>
+<a name="Elfutils-0_002e176"></a>
+<h4 class="subsection">5.2 Elfutils 0.176</h4>
+
+<p>Elfutils 0.176 requires glibc 2.16 or later (for <code>aligned_alloc</code>)
+and won&rsquo;t work with an older glibc, including RedHat or CentOS 6.x and
+Blue Gene.  On systems with an old glibc, use version 0.175.
+</p>
+<hr>
+
+
+
+<div style="width: 100%; font-size: small;">
+  <hr />
+  <p style="margin: 0px; font-size: small;">
+    &copy;2000-2018 <a href="http://www.rice.edu">Rice University</a>
+    &bull;
+    <a href="http://www.cs.rice.edu">Rice Computer Science</a>
+  </p>
+  <a href="http://validator.w3.org/check/referer">
+    <img src="http://www.w3.org/Icons/valid-xhtml10-blue" alt="" height="15" /></a>
+  <a href="http://jigsaw.w3.org/css-validator/check/referer">
+    <img src="http://www.w3.org/Icons/valid-css-blue" alt="" height="15" /></a>
+</div>
+
+</body>
+</html>

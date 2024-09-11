@@ -1,0 +1,136 @@
+'\" t
+.\" Manual page created with latex2man on Tue Jun 11 01:08:27 PM PDT 2024
+.\" NOTE: This file is generated, DO NOT EDIT.
+.de Vb
+.ft CW
+.nf
+..
+.de Ve
+.ft R
+
+.fi
+..
+.TH "HPCPROFTT" "1" " 2018/08/27" "The HPCToolkit Performance Tools " "The HPCToolkit Performance Tools "
+.SH NAME
+
+.PP
+hpcproftt
+generates textual dumps of call path profiles recorded by hpcrun. 
+.PP
+.SH SYNOPSIS
+
+.PP
+hpcproftt
+\fIprofile\-file\fP
+\&.\&.\&.
+.br
+hpcproftt
+\fI\-V\fP
+.br
+hpcproftt
+\fI\-h\fP
+.PP
+.SH DESCRIPTION
+
+.PP
+hpcproftt
+generates textual dumps of call path profiles recorded 
+by hpcrun. The profile list may contain one or more call path profiles. 
+.PP
+This tool principally intended for use by HPCToolkit developers rather 
+than end users. Under some circumstances, a user might be interested in 
+examining the raw measurement data (1) if HPCToolkit\&'s tool chain has a problem processing 
+the measurement data, or (2) if he or she is interested in inspecting 
+measurements data associated with an individual instruction, which is below the 
+line\-level attribution reported by HPCToolkit\&'s graphical user interfaces. 
+.PP
+The first section of the output describes the profile header. The profile 
+header contains information including the name of the executable, its 
+path, and the value of the PATH environment variable when the program was 
+run, along with other metadata including the batch scheduler job id, MPI 
+rank, thread ID, host ID, process ID on the host, and times when the first 
+and last samples were recorded if tracing was enabled during an execution. 
+.PP
+The second section describes the epoch header. Conceptually, measurement 
+of an execution is divided into one or more epochs in time. Measurements 
+taken during an epoch are collected and flushed to disk separately. This 
+section is mostly of historical interest as now hpcrun typically collects 
+measurements in a single epoch. 
+.PP
+The third section of the profile reports the metric table. This lists 
+all metrics collected during the execution of an MPI rank or thread. 
+Information about a metric includes its name, type, format, and whether 
+there is another partner metric. The show and showPercent fields 
+indicate whether the metrics should be displayed by default in hpcviewer. 
+The period field is used to scale the number of samples collected, e.g. to 
+convert samples collected every 1M cache misses into cache miss counts. 
+.PP
+The next section of the output reports information that HPCToolkit\&'s 
+collected about the application\&'s load map during execution. The load 
+map consists of a series of pairs, where an executable or shared 
+library is assigned an integer load module ID, known as an lm\-id. 
+Call path samples consist of a sequence of (load module ID, offset) 
+pairs. Each pair represents a location in an application binary or one 
+of its associated shared libraries. Load module IDs present in a call 
+path profile generally correspond to load module IDs in this table. In 
+certain cases, the special dummy load module ID 0 used to represent CCT 
+nodes that are not associated with object code. The calling context tree 
+root is an example of one of these nodes. 
+.PP
+The last component of the file is the Calling Context Tree (CCT). Each 
+node in the tree has an ID, the ID of its parent in the tree, an 
+(lm\-id, lm\-ip) pair that represents the load module and a relative 
+instruction pointer within that load module that represents a location 
+in a call path. A node in the tree may or may not have non\-zero metric 
+values associated with it. If a node\&'s ID is negative, that means the 
+node is a leaf in the tree. If a node\&'s ID is odd, that means that it 
+was recorded in an associated trace file and must be handled carefully 
+during post\-processing. 
+.PP
+.SH ARGUMENTS
+
+.PP
+.TP
+\fIprofile\-file\fP ...
+ A list of one or more call path profiles. 
+.PP
+.SS OPTIONS
+.PP
+.TP
+\fB\-V\fP, \fB\-\-version\fP
+ Print version information. 
+.TP
+\fB\-h\fP, \fB\-\-help\fP
+ Print help. 
+.PP
+.SH SEE ALSO
+
+.PP
+\fIhpctoolkit\fP(1)
+\&.
+.PP
+.SH VERSION
+
+.PP
+Version: 2020.07-develop
+.PP
+.SH LICENSE AND COPYRIGHT
+
+.PP
+.TP
+Copyright 
+(C)2002\-2020, Rice University. 
+.TP
+License 
+See README.License\&.
+.PP
+.SH AUTHORS
+
+.PP
+Rice University\&'s HPCToolkit Research Group 
+.br
+Email: \fBhpctoolkit\-forum =at= rice.edu\fP
+.br
+WWW: \fBhttp://hpctoolkit.org\fP\&.
+.PP
+.\" NOTE: This file is generated, DO NOT EDIT.

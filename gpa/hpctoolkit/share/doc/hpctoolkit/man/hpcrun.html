@@ -1,0 +1,723 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!-- Manual page created with latex2man on Tue Jun 11 01:08:27 PM PDT 2024 --
+-- Author of latex2man: Juergen.Vollmer@informatik-vollmer.de --
+-- NOTE: This file is generated, DO NOT EDIT. -->
+<html>
+<head><title>HPCRUN</title></head>
+<body bgcolor="white">
+<h1 align=center>
+hpcrun:<br>
+Statistical Profiling 
+</h1>
+<h4 align=center>The HPCToolkit Performance Tools </h4>
+<h4 align=center>2018/09/30</h4>
+<h4 align=center>Version 2020.07-develop</h4>
+<p>
+<tt>hpcrun</tt>
+is profiling tool that collects call path profiles of program executions 
+using statistical sampling of hardware counters, software counters, or timers. 
+<p>
+See <a href="hpctoolkit.html"><em>hpctoolkit</em>(1)
+</a>for an overview of <strong>HPCToolkit</strong>.
+<p>
+<h3>Table of Contents</h3>
+<ul>
+<li><a href="#section_1">Synopsis </a></li>
+<li><a href="#section_2">Description </a></li>
+<li><a href="#section_3">Arguments </a>
+<ul>
+<li><a href="#section_4">Command </a></li>
+<li><a href="#section_5">Options: Informational </a></li>
+<li><a href="#section_6">Options: Profiling </a></li>
+<li><a href="#section_7">Options: HPCToolkit Development </a></li>
+</ul>
+<li><a href="#section_8">Environment Variables </a></li>
+<li><a href="#section_9">Launching </a></li>
+<li><a href="#section_10">Examples </a></li>
+<li><a href="#section_11">Notes </a>
+<ul>
+<li><a href="#section_12">Sample sources </a>
+<ul>
+<li><a href="#section_13">Linux perf_events Interface </a></li>
+<li><a href="#section_14">PAPI Interface (optional) </a></li>
+<li><a href="#section_15">System itimer (WALLCLOCK). </a></li>
+</ul>
+<li><a href="#section_16">Platform-specific notes </a>
+<ul>
+<li><a href="#section_17">Cray Systems </a></li>
+</ul>
+<li><a href="#section_18">Miscellaneous </a></li>
+</ul>
+<li><a href="#section_19">See Also </a></li>
+<li><a href="#section_20">Version </a></li>
+<li><a href="#section_21">License and Copyright </a></li>
+<li><a href="#section_22">Authors </a></li>
+</ul>
+<p>
+<h2><a name="section_1">Synopsis</a></h2>
+
+<p>
+<tt>hpcrun</tt>
+[<b>profiling-options</b>]
+<i>command</i>
+[<b>command-arguments</b>]
+<p>
+<tt>hpcrun</tt>
+[<b>info-options</b>]
+<p>
+<h2><a name="section_2">Description</a></h2>
+
+<p>
+<tt>hpcrun</tt>
+profiles the execution of an arbitrary command <i>command</i>
+using statistical sampling. 
+<tt>hpcrun</tt>
+can profile an execution using multiple sample sources simultaneously, 
+supports measurement of applications with multiple processes and/or multiple threads, and handles complex runtime behaviors including 
+fork, exec, and/or dynamic loading of shared libraries. 
+<tt>hpcrun</tt>
+can be used in conjunction with program launchers such as <tt>mpiexec</tt>
+and SLURM's <tt>srun</tt>.
+<p>
+To profile a statically-linked executable, make sure to link with <a href="hpclink.html"><em>hpclink</em>(1)
+</a>.
+<p>
+To configure <tt>hpcrun</tt>'s
+sampling sources, specify events and periods using the <tt>-e/--event</tt>
+option. 
+For an event <em>e</em>
+and period <em>p</em>,
+after every <em>p</em>
+instances of <em>e</em>,
+a sample is generated that causes <tt>hpcrun</tt>
+to inspect the 
+current calling context and augment its execution measurements of the monitored <i>command</i>.
+<p>
+If no sample source is specified, by default <tt>hpcrun</tt>
+profile using the timer 
+CPUTIME on Linux or WALLCLOCK on Blue Gene at a frequency of 200 samples per second per thread. 
+<p>
+When <i>command</i>
+terminates, a profile measurement database will be written to the directory:<br>
+
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<tt>hpctoolkit-</tt><i>command</i><tt>-measurements</tt>[<tt>-</tt><i>jobid</i>]<br>
+
+<br>
+where <i>jobid</i>
+is a parallel job launcher id associated with the execution, if available. 
+<p>
+<tt>hpcrun</tt>
+allows you to abort an execution and write the partial profiling data to disk by sending a signal such as SIGHUP or SIGINT 
+(which is often bound to Control-c). 
+This can be extremely useful to collect data for long-running or misbehaving applications. 
+<p>
+<h2><a name="section_3">Arguments</a></h2>
+
+<p>
+Default values for optional arguments are shown in {}. 
+<p>
+<h4><a name="section_4">Command</a></h4>
+
+<p>
+<dl compact>
+<dt><i>command</i>
+</dt>
+<dd> The command to profile. 
+<p>
+</dd>
+<dt><i>command-arguments</i>
+</dt>
+<dd> Arguments to the command to profile. 
+</dd>
+</dl>
+<p>
+<h4><a name="section_5">Options: Informational</a></h4>
+
+<p>
+<dl compact>
+<dt><b>-l</b>, <b>-L</b>, <b>--list-events</b>
+</dt>
+<dd> 
+List available events. (N.B.: some may not be profilable) 
+<p>
+</dd>
+<dt><b>-V</b>, <b>--version</b>
+</dt>
+<dd> 
+Print version information. 
+<p>
+</dd>
+<dt><b>-h</b>, <b>--help</b>
+</dt>
+<dd> 
+Print help. 
+</dd>
+</dl>
+<p>
+<h4><a name="section_6">Options: Profiling</a></h4>
+
+<p>
+<dl compact>
+<p>
+<dt><b>-ds</b>, <b>--delay-sampling</b>
+</dt>
+<dd> 
+Don't start sampling until the application enables sampling under program control. 
+Use this option to measure specific intervals in an application's execution by bracketing code 
+regions where measurement is desired 
+with calls to <tt>hpctoolkit_sampling_start()</tt>
+and <tt>hpctoolkit_sampling_stop()</tt>.
+Sampling may be started and stopped any number of times during an execution; 
+measurements from all measurement intervals are aggregated. 
+<p>
+</dd>
+<dt><b>-e</b> <i>event[@howoften]</i>, <b>--event</b> <i>event[@howoften]</i>
+</dt>
+<dd> 
+<i>event</i>
+may be an architecture-independent hardware or software event supported by Linux perf, a native hardware counter event, 
+a hardware counter event supported by the PAPI library, a Linux system timer (<tt>CPUTIME</tt>
+and <tt>REALTIME</tt>),
+or the 
+operating system interval timer <tt>WALLCLOCK</tt>.
+This option may be given multiple times to profile several events at once. 
+While events measured using the Linux perf monitoring infrastructure will be transparently multiplexed if necessary, 
+for other sampling sources or on operating systems such as the Blue Gene Compute Node Kernel, 
+there may be system-dependent limits on how many events can be profiled simultaneously and on which events may be combined for profiling. 
+If the value for <i>howoften</i>
+is a number, it will be interpreted as a sample period. 
+For Linux perf events, one may specify a sampling frequency for <i>howoften</i>
+by writing f before a number. 
+For instance, to sample an event 100 times per second, specify <i>howoften</i>
+as '@f100'. 
+For Linux perf events, if no value for <i>howoften</i>
+is specified, <tt>hpcrun</tt>
+will monitor the event using frequency-based sampling at 300 samples/second. 
+<ul compact>
+<li>For timer events <tt>CPUTIME</tt>, <tt>REALTIME</tt>, and <tt>WALLCLOCK</tt>, the units for a sample period are microseconds.
+</li>
+<li>Timer events should not be mixed with hardware events. 
+</li>
+<li>See the ``Sample sources'' under <strong>NOTES</strong> for additional details.
+</li>
+</ul>
+<p>
+</dd>
+<dt><b>-c</b> <i>howoften</i>, <b>--count</b> <i>howoften</i>
+</dt>
+<dd> 
+Only available for events managed by Linux perf. This option 
+specifies a default value for how often to sample. The value for <i>howoften</i>
+may be a number that will be used as a default 
+event period or an f followed by a number, e.g. f100, to specify a default sampling frequency in samples/second. 
+<p>
+By default, <tt>hpcrun</tt>
+will allow attribution of hardware counter events to have arbitrary skid. 
+Some processor architectures, e.g., ARM, don't support attribution with any higher level of precision. 
+If a processor does not support the specified level of attribution precision for a hardware counter event, 
+<tt>hpcrun</tt>
+may record 0 occurrences of the event without reporting an error. 
+<p>
+</dd>
+<dt><b>-f</b> <i>frac</i>, <b>-fp</b> <i>frac</i>, <b>--process-fraction</b> <i>frac</i>
+</dt>
+<dd> 
+Measure only a fraction <i>frac</i>
+of the execution's processes. 
+For each process, enable measurement of each thread with probability <i>frac</i>,
+a real number or a fraction (1/10) between 0 and 1. 
+To minimize perturbations, when measurement for a process is disabled 
+all threads in a process still receive sampling interrupts but they are ignored. 
+<p>
+</dd>
+<dt><b>-lm</b> <i>size</i>, <b>--low-memsize</b> <i>size</i>
+</dt>
+<dd> 
+Allocate an additional segment to store measurement data 
+whenever free space in the current segment is less than the specified <i>size</i>.
+If not given, the default for <i>size</i>
+is&nbsp;80K. 
+<p>
+</dd>
+<dt><b>-m</b> <i>switch</i>, <b>--merge-threads</b> <i>switch</i>
+</dt>
+<dd> Merge non-overlapped threads into one virtual thread. 
+This option is to reduce the number of generated 
+profile and trace files as each thread generates its own 
+profile and trace data. The options are: 
+<ul compact>
+<li>0 : do not merge non-overlapped threads 
+</li>
+<li>1 : merge non-overlapped threads (default) 
+</li>
+</ul>
+<p>
+</dd>
+<dt><b>-ms</b> <i>size</i>, <b>--memsize</b> <i>size</i>
+</dt>
+<dd> 
+Use the specified <i>size</i>
+as segment size when allocating memory for measurement data. 
+The specified value is rounded up to a multiple of the `system page size. 
+If not given, the default for <i>size</i>
+is&nbsp;4M. 
+<p>
+</dd>
+<dt><b>-mp</b> <i>prob</i>, <b>--memleak-prob</b> <i>prob</i>
+</dt>
+<dd> 
+Monitor a subset of memory allocations performed by the application to detect leaks. 
+An allocation is a call to one of <tt>malloc</tt>,
+<tt>calloc</tt>,
+<tt>realloc</tt>,
+etc 
+and its matching call to <tt>free</tt>.
+At each allocation HPCToolkit generates a pseudo-random number in the range [0.0, 1.0) 
+and monitors the allocation if the number is less than the value <i>prob</i>
+specified here, 
+The value may be written as a a floating point number or as a fraction. 
+If not given, the default for <i>prob</i>
+is&nbsp;0.1. 
+<p>
+</dd>
+<dt><b>-o</b> <i>outpath</i>, <b>--output</b> <i>outpath</i>
+</dt>
+<dd> 
+Directory to receive output data. 
+If not given, the default directory ia <tt>hpctoolkit-<command>-measurements[-<jobid>]</tt>.
+<ul compact>
+Caution: If no <jobid> is available and no output option is given, 
+profiles from multiple runs of the same <command> will be placed into the same output directory, 
+which may lead to confusing or incorrect analysis results. 
+</li>
+</ul>
+<p>
+</dd>
+<dt><b>-r</b>, <b>--retain-recursion</b>
+</dt>
+<dd> 
+Do not collapse simple recursive call chains. 
+Normally as <tt>hpcrun</tt>
+monitors an application that employs simple recursion, it collapses call chains of recursive calls to a single level. 
+This design enables a user to see how the aggregate costs of recursion are associated with each recursive call yet 
+saves space and time during post-mortem analysis by collapsing long chains of recursive calls. 
+If this option is given, <tt>hpcrun</tt>
+will record all elements of a recursive call chain. 
+Note: When you use the <tt>RETCNT</tt>
+sample source this option is enabled automatically 
+to gather accurate counts. 
+<p>
+</dd>
+<dt><b>-t</b>, <b>--trace</b>
+</dt>
+<dd> 
+Generate a call path trace in addition to a call path profile. 
+<p>
+</dd>
+</dl>
+<p>
+<h4><a name="section_7">Options: HPCToolkit Development</a></h4>
+
+<p>
+<dl compact>
+<p>
+These options are intended for use by the HPCToolkit team, 
+but could be helpful to others interested in HPCToolkit's implementation. 
+. 
+<p>
+<dt><b>-d</b>, <b>--debug</b>
+</dt>
+<dd> 
+After initialization, spin wait until you attach a debugger 
+to one or more of the application's processes. 
+After attaching you can set breakpoints or watchpoints in your application's code 
+or in HPCToolkit's <tt>hpcrun</tt>
+code before beginning application execution. 
+To continue after attaching, use the debugger to call <tt>hpcrun_continue()</tt>
+and then resume execution. 
+<p>
+</dd>
+<dt><b>-dd</b> <i>flag</i>, <b>--dynamic-debug</b> <i>flag</i>
+</dt>
+<dd> 
+Enable the flag <tt>flag</tt>,
+causing <tt>hpcrun</tt>
+to log debug messages guarded with that flag 
+during execution. 
+A list of dynamic debug flags can be found in HPCToolkit's source code 
+in the file <tt>src/tool/hpcrun/messages/messages.flag-defns</tt>.
+Note that not all flags are meaningful on all architectures. 
+The special value <tt>ALL</tt>
+enables all debug flags. 
+<br>
+Caution: turning on debug flags produces many log messages, 
+often dramatically slowing the application and potentially distorting the measured profile. 
+<p>
+</dd>
+<dt><b>-md</b>, <b>--monitor-debug</b>
+</dt>
+<dd> 
+Enable debug tracing of <tt>libmonitor</tt>,
+the <tt>hpcrun</tt>
+subsystem which implements process/thread control. 
+<p>
+</dd>
+</dl>
+<p>
+<h2><a name="section_8">Environment Variables</a></h2>
+
+To function correctly, <tt>hpcrun</tt>
+must know the location of the <tt>HPCToolkit</tt>
+top-level installation directory so that it can access toolkit components located 
+in its <tt>lib</tt>
+and <tt>libexec</tt>
+subdirectories. 
+Under most circumstances, <tt>hpcrun</tt>
+requires no special environment variable settings. 
+<p>
+There are two situations, however, where <tt>hpcrun</tt>
+<em>must</em>
+consult the <tt>HPCTOOLKIT</tt> environment variable to determine the location 
+of the top-level installation directory: 
+<p>
+<ul compact>
+<li>On some systems, parallel job launchers (e.g., Cray's aprun) <em>copy</em> the
+<tt>hpcrun</tt>
+script to a different location. For <tt>hpcrun</tt>
+to know 
+the location of its top-level installation directory, 
+you must set the <tt>HPCTOOLKIT</tt> environment variable to the 
+top-level installation directory. 
+</li>
+<li> 
+If you launch <tt>hpcrun</tt>
+script via a file system link, 
+you must set <tt>HPCTOOLKIT</tt> for the same reason. 
+</li>
+</ul>
+<p>
+<h2><a name="section_9">Launching</a></h2>
+
+<p>
+When sampling with native events, by default hpcrun will profile using perf events. 
+To force HPCToolkit to use PAPI (assuming it's available) instead of perf events, one 
+must prefix the event with '<tt>papi::</tt>'
+as follows: 
+<p>
+<pre>
+hpcrun -e papi::CYCLES
+</pre>
+<p>
+For PAPI presets, there is no need to prefix the event with 'papi::'. For instance it is 
+sufficient to specify <tt>PAPI_TOT_CYC</tt>
+event without any prefix to profile using PAPI. 
+<p>
+To sample an execution 100 times per second (frequency-based sampling) counting 
+CYCLES and 100 times a second counting INSTRUCTIONS: 
+<pre>
+hpcrun -e CYCLES@f100 -e INSTRUCTIONS@f100 ...
+</pre>
+<p>
+To sample an execution every 1,000,000 cycles and every 1,000,000 instructions using 
+period-based sampling: 
+<pre>
+hpcrun -e CYCLES@1000000 -e INSTRUCTIONS@1000000 ...
+</pre>
+By default, hpcrun will use frequency-based sampling with the rate 300 samples per 
+second per event type. Hence the following command will cause HPCToolkit to sample 
+CYCLES at 300 samples per second and INSTRUCTIONS at 300 samples per second: 
+<pre>
+hpcrun -e CYCLES -e INSTRUCTIONS ...
+</pre>
+One can a different default rate using the -c option. The command below will sample 
+CYCLES at 200 samples per second and INSTRUCTIONS at 200 samples per second: 
+<pre>
+hpcrun -c f200 -e CYCLES -e INSTRUCTIONS ...
+</pre>
+<p>
+<h2><a name="section_10">Examples</a></h2>
+
+<p>
+Assume we wish to profile the application <tt>zoo</tt>.
+The following examples lists some useful events for different processor architectures. 
+<p>
+<ul compact>
+<li><tt>hpcrun -e CYCLES -e INSTRUCTIONS zoo</tt>
+</li>
+<li><tt>hpcrun -e REALTIME@5000 zoo</tt>
+</li>
+<li><tt>hpcrun -e DC_L2_REFILL@1300013 -e PAPI_L2_DCM@510011 -e PAPI_STL_ICY@5300013 -e PAPI_TOT_CYC@13000019 zoo</tt>
+</li>
+<li><tt>hpcrun -e PAPI_L2_DCM@510011 -e PAPI_TLB_DM@510013 -e PAPI_STL_ICY@5300013 -e PAPI_TOT_CYC@13000019 zoo</tt>
+</li>
+</ul>
+<p>
+</li>
+</ol>
+<p>
+<h2><a name="section_11">Notes</a></h2>
+
+<p>
+<h4><a name="section_12">Sample sources</a></h4>
+
+<p>
+<tt>hpcrun</tt>
+uses Linux perf_events (default on Linux platform) and optionally the PAPI library to provide access to hardware performance counter events. 
+It is important to note that on most out-of-order pipelined architectures, a hardware counter interrupt is not precisely attributed to the instruction that induced the counter to overflow. 
+The gap is commonly 50-70 instructions. 
+This means that one should not assume that aggregation at the source line level is fully precise. 
+(E.g., if a L1 D-cache miss is attributed to a statement that has been compiled to register-only operations, assume the miss is attributed to a nearby load.) 
+However, aggregation at the procedure and loop level is reliable. 
+<p>
+<h5><a name="section_13">Linux perf_events Interface</a></h5>
+
+<p>
+Linux <tt>perf_events</tt>
+provides a powerful interface that supports 
+measurement of both application execution and kernel activity. 
+Using 
+<tt>perf_events</tt>,
+one can measure both hardware and software events. 
+Using a processor's hardware performance monitoring unit (PMU), the 
+<tt>perf_events</tt>
+interface can measure an execution using any hardware counter 
+supported by the PMU. Examples of hardware events include cycles, instructions 
+completed, cache misses, and stall cycles. Using instrumentation built in to the Linux kernel, 
+the <tt>perf_events</tt>
+interface can measure software events. Examples of software events include page 
+faults, context switches, and CPU migrations. 
+<p>
+HPCToolkit uses libpfm4 to translate from an event name string to an event code recognized by the kernel. 
+An event name is case insensitive and is defined as followed: 
+<pre>
+[pmu::][event_name][:unit_mask][:modifier|:modifier=val] 
+</pre>
+<p>
+<ul compact>
+<li><strong>pmu</strong>. Optional name of the PMU (group of events) to which the event belongs to. This is useful to disambiguate events in case events from difference sources have the same name. If no pmu is specified, the first match event is used.
+</li>
+<li><strong>event_name</strong>. The name of the event. It must be the complete name, partial matches are not accepted.
+</li>
+<li><strong>unit_mask</strong>. This designate an optional sub-events. Some events can be refined using sub-events. An event may have multiple unit masks and it is possible to combine them (for some events) by repeating <tt>:unit_mask</tt> pattern.
+</li>
+<li><strong>modifier</strong>. A modifier is an optional filter which modifies how the event counts. Modifiers have a type and a value specified after the equal sign.
+For boolean type modifiers, without specifying the value, the presence of the modifier is interpreted as meaning true. Events may support multiple modifiers, by repeating the <tt>:modifier|:modifier=val</tt>
+pattern. 
+<ul compact>
+<li><strong>precise_ip</strong>. For some events, it is possible to control the amount of skid.
+Skid is a measure of how many instructions may execute between an event and the PC where the event is reported. 
+Smaller skid enables more accurate attribution of events to instructions. Without a skid modifier, hpcrun allows arbitrary skid because some architectures 
+don't support anything more precise. One may optionally specify one of the following as a skid modifier: 
+<ul compact>
+<li><tt>:p</tt> : a sample must have constant skid. 
+</li>
+<li><tt>:pp</tt> : a sample is requested to have 0 skid. 
+</li>
+<li><tt>:ppp</tt> : a sample must have 0 skid. 
+</li>
+<li><tt>:P</tt> : autodetect the least skid possible. 
+</li>
+</ul>
+NOTE: If the kernel or the hardware does not support the specified value of the skid, no error message will be reported 
+but no samples will be delivered. 
+</li>
+</ul>
+</li>
+</ul>
+<p>
+Some capabilities of HPCToolkit's <tt>perf_events</tt>
+Interface include: 
+<ul compact>
+<li><strong>Frequency-based sampling.</strong>
+Rather than picking a sample period for a hardware counter, 
+the Linux <tt>perf_events</tt>
+interface enables one to specify the desired sampling frequency 
+and have the kernel automatically select and adjust the period 
+to try to achieve the desired sampling frequency. 
+To use frequency-based sampling, one can specify the sampling rate 
+for an event as the desired number of samples per second 
+by prefixing the rate with the letter “<tt>f</tt>”. 
+<p>
+</li>
+<li><strong>Multiplexing.</strong>
+Using multiplexing enables one to monitor more events 
+in a single execution than the number of hardware counters a processor 
+can support for each thread. The number of events that can be monitored in 
+a single execution is only limited by the maximum number of concurrent 
+events that the kernel will allow a user to multiplex using the 
+<tt>perf_events</tt>
+interface. 
+<p>
+When more events are specified than can be monitored simultaneously 
+using a thread's hardware counters, 
+the kernel will employ multiplexing and divide 
+the set of events to be monitored into groups, monitor only one group 
+of events at a time, and cycle repeatedly through the groups 
+as a program executes. 
+<p>
+</li>
+<li><strong>Thread blocking.</strong> When a program executes,
+a thread may block waiting for the kernel to complete some operation on its behalf. 
+Example operations include waiting for a <tt>read</tt>
+operation to complete or having the 
+kernel service a page fault or zero-fill a page. On systems running Linux 4.3 or newer, one can use the <tt>perf_events</tt>
+sample source to monitor how much time a thread is blocked and where the blocking occurs. To measure 
+the time a thread spends blocked, one can profile with <tt>BLOCKTIME</tt> event and 
+another time-based event, such as <tt>CYCLES</tt>. The <tt>BLOCKTIME</tt> event shouldn't have any frequency or period specified, whereas <tt>CYCLES</tt> should have a frequency or period specified. 
+<p>
+</li>
+</ul>
+<p>
+<h5><a name="section_14">PAPI Interface (optional)</a></h5>
+
+The PAPI library supports a large collection of hardware counter events. 
+Some events have standard names across all platforms, e.g. <tt>PAPI_TOT_CYC</tt>, the event that measures total cycles. 
+In addition to events whose names begin with the <tt>PAPI_</tt> prefix, platforms also provide access to a set of native events with names that are specific to the platform's processor. 
+A complete list of events supported by the PAPI library for your platform may be obtained by using the <tt>--list-events</tt>
+option. 
+Any event whose name begins with the <tt>PAPI_</tt> prefix that is listed as "Profilable" can be used as an event in a sampling source provided it does not conflict with another event. 
+<p>
+The rules of thumb for selecting an appropriate set of events and their associated periods are complex. 
+<ul compact>
+<p>
+<li><strong>Choosing sampling events.</strong>
+Some PAPI events are not profilable because of PAPI implementation details. 
+Also, PAPI's standard event list may not cover an architectural feature you are interested in. 
+In such cases, it is necessary to resort to native events. 
+In many cases, you will have to consult the architecture's manual to fully understand what the event means: there is no standard event list or naming scheme and events sometimes have unusual meanings. 
+<p>
+</li>
+<li><strong>Number of sampling events.</strong>
+<tt>hpcrun</tt>
+does not multiplex hardware counters for events measured using PAPI. (Events measured using the Linux 
+perf interface will be multiplexed automatically.) 
+Without multiplexing, the number of events that you may use to profile a single execution 
+is limited by your architecture's performance monitoring unit. 
+Note that some architectures hard-wire one or more counters to a specific event (such as cycles). 
+<p>
+</li>
+<li><strong>Choosing sampling periods.</strong>
+The key requirement in choosing sampling periods is that you obtain enough samples to provide statistical significance. 
+We usually recommend a sampling rate between 100s-1000s of samples per second. 
+This usually only produces 1-5% execution time overhead. 
+<p>
+Choosing sampling rates depends on the architecture and sometimes the application. 
+<p>
+Choosing periods for cycle and instruction-related events are usually easy. 
+Cycles directly relates to the clock speed. 
+Instruction-related events relates to the issue rate and width. 
+<p>
+Choosing periods for other events seems harder because different applications uses resources differently. 
+For example, some applications are memory intensive and others are not. 
+However, if the goal is to identify rate-limiting factors of the architecture, then it is not necessary to consider the application. 
+For example, if the goal is to determine whether L2 D-cache latency is a limiting factor, then it is only necessary to work backward from the architecture's specifications to determine what number of L2 D-cache misses per second would be problematic. 
+<p>
+</li>
+<li><strong>Architectural event conflicts.</strong>
+With some performance monitoring units, certain events may not be concurrently used with other events. 
+</li>
+</ul>
+<p>
+<h5><a name="section_15">System itimer (WALLCLOCK).</a></h5>
+
+On Linux systems, the kernel will not deliver itimer interrupts faster than the unit of a jiffy, which defaults to 4 milliseconds; see the itimer man page. 
+One can configure the kernel to use a value as small as 1 millisecond, but it is unlikely the kernel will actually deliver itimer signals at that rate when a period of 1000 microseconds is requested. 
+<p>
+However, on Linux one can get quite close to the kernel Hz rate by setting the itimer interval to something less than the Hz rate. 
+For example, if the Hz rate is 1000 microseconds, one can use 500 microseconds (or just 1) and obtain about 999 interrupts per second. 
+<p>
+<h4><a name="section_16">Platform-specific notes</a></h4>
+
+<h5><a name="section_17">Cray Systems</a></h5>
+
+When using dynamically linked binaries on Cray systems, you 
+should add the <tt>HPCTOOLKIT</tt> environment variable to your launch 
+script. Set <tt>HPCTOOLKIT</tt> to the top-level <tt>HPCToolkit</tt> install 
+prefix (the directory containing the <tt>bin</tt>,
+<tt>lib</tt>
+and 
+<tt>libexec</tt>
+subdirectories) and export it to the environment. This is 
+only needed for running dynamically linked binaries. For example: 
+<p>
+<pre>
+#!/bin/sh
+#PBS -l mppwidth=#nodes
+#PBS -l walltime=00:30:00
+#PBS -V
+
+export HPCTOOLKIT=/path/to/hpctoolkit/install/directory
+
+    ...Rest of Script...
+</pre>
+<p>
+If <tt>HPCTOOLKIT</tt> is not set, you may see errors such as the 
+following in your job's error log. 
+<p>
+<pre>
+/var/spool/alps/103526/hpcrun: Unable to find HPCTOOLKIT root directory.
+Please set HPCTOOLKIT to the install prefix, either in this script,
+or in your environment, and try again.
+</pre>
+<p>
+The problem is that the Cray ALPS job launcher copies the <tt>hpcrun</tt>
+script to a directory somewhere below <tt>/var/spool/alps/</tt>
+and runs 
+it from there. By moving <tt>hpcrun</tt>
+to a different directory, this 
+breaks <tt>hpcrun</tt>'s
+default method for finding HPCToolkit's top-level 
+installation directory. 
+The solution is to add <tt>HPCTOOLKIT</tt> to your environment so that 
+<tt>hpcrun</tt>
+can find HPCToolkit's top-level installation directory. 
+<p>
+<h4><a name="section_18">Miscellaneous</a></h4>
+
+<p>
+<ul compact>
+<li><tt>hpcrun</tt> uses preloaded shared libraries to initiate profiling. For this reason, it cannot be used to profile setuid programs.
+</li>
+<li><tt>hpcrun</tt> may not be able to profile programs that themselves use preloading.
+</li>
+</ul>
+<p>
+<h2><a name="section_19">See Also</a></h2>
+
+<p>
+<a href="hpctoolkit.html"><em>hpctoolkit</em>(1)
+</a>.<br>
+
+<a href="hpclink.html"><em>hpclink</em>(1)
+</a>.
+<p>
+<h2><a name="section_20">Version</a></h2>
+
+<p>
+Version: 2020.07-develop
+<p>
+<h2><a name="section_21">License and Copyright</a></h2>
+
+<p>
+<dl compact>
+<dt>Copyright</dt>
+<dd> &copy; 2002-2020, Rice University. 
+</dd>
+<dt>License</dt>
+<dd> See <tt>README.License</tt>.
+</dd>
+</dl>
+<p>
+<h2><a name="section_22">Authors</a></h2>
+
+<p>
+Rice University's HPCToolkit Research Group <br>
+
+Email: <a href ="mailto:hpctoolkit-forum =at= rice.edu"><tt>hpctoolkit-forum =at= rice.edu</tt></a>
+<br>
+WWW: <a href ="http://hpctoolkit.org"><tt>http://hpctoolkit.org</tt></a>.
+<p>
+</body>
+</html>
+<!-- NOTE: This file is generated, DO NOT EDIT. -->
