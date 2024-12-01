@@ -1,3 +1,0 @@
-/usr/local/lib/libtorch_monitor.so
-/usr/local/include/torch_monitor.h
-/usr/local/lib/driver.so
