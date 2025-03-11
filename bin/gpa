@@ -13,6 +13,7 @@ Usage:
     -arch <gpu-arch>
     default: V100 
     -v output logs in gpa.log
+    -env <conda_env name>
 EOF
   exit 0
 }
@@ -37,6 +38,10 @@ do
       ;;
     -arch)
       export GPA_ARCH=$1
+      shift
+      ;;
+    -env)
+      export CONDA_ENV=$1
       shift
       ;;
     * )
@@ -70,8 +75,15 @@ else
   export GPA_REDIRECT=/dev/null
 fi
 
+if [ -z "$CONDA_ENV" ]
+then
+  echo "Empty conda env"
+  exit
+fi
+
 MEASUREMENTS=gpa-measurements
 DATABASE=gpa-database
+export USER_NAME=$(whoami) 
 echo "Make sure "$MEASUREMENTS" and "$DATABASE" is clean"
 rm -rf $MEASUREMENTS
 rm -rf $DATABASE
@@ -81,11 +93,8 @@ echo "Profiling: collect pc sampling performance metrics"
 export LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64/:$LD_LIBRARY_PATH 
 export LD_LIBRARY_PATH=/home/xjding/Projects/GPA/GPA/gpa/torch-monitor/usr/local/lib/:$LD_LIBRARY_PATH
 
-# export LD_LIBRARY_PATH=/home/xjding/anaconda3/envs/benchmark/lib/:$LD_LIBRARY_PATH
-# export LD_LIBRARY_PATH=/home/xjding/anaconda3/envs/benchmark/lib/python3.11/site-packages/torch/lib/:$LD_LIBRARY_PATH
-
-export LD_LIBRARY_PATH=/home/xjding/anaconda3/envs/my_torch_250_121/lib/:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/home/xjding/anaconda3/envs/my_torch_250_121/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/${USER_NAME}/anaconda3/envs/${CONDA_ENV}/lib/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/${USER_NAME}/anaconda3/envs/${CONDA_ENV}/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH
 
 # time hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
 time hpcrun -e gpu=nvidia,pc -o $MEASUREMENTS python $GPA_EXEC $GPA_ARGS &>$GPA_REDIRECT
@@ -106,15 +115,46 @@ fi
 
 echo "Parsing: parse CPU and GPU binaries"
 time hpcstruct --gpucfg yes -j $GPA_THREADS $MEASUREMENTS &>>$GPA_REDIRECT
-# time hpcstruct --gpu-size 100000 -j $GPA_THREADS $MEASUREMENTS &>>$GPA_REDIRECT
+cd $MEASUREMENTS/structs
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/bin/python3.11 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/Projects/GPA/GPA/gpa/hpctoolkit/lib/hpctoolkit/libhpcrun.so.0.0.0 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/Projects/GPA/GPA/gpa/hpctoolkit/lib/hpctoolkit/ext-libs/libmonitor.so.0.0.0 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/libgomp.so.1.0.0 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /usr/lib/x86_64-linux-gnu/libcuda.so.535.183.01 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /usr/local/cuda-12.1/extras/CUPTI/lib64/libcupti.so.2023.1.0 &>> $GPA_REDIRECT
+
+  #  hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/libcublas.so.12.1.0.26 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /usr/local/cuda-12.1/targets/x86_64-linux/lib/libcublas.so.12.1.0.26 &>> $GPA_REDIRECT
+
+  hpcstruct -j $GPA_THREADS /usr/local/cuda-12.1/targets/x86_64-linux/lib/libcublasLt.so.12.1.0.26 &>> $GPA_REDIRECT
+  # hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/libcublasLt.so.12.1.0.26 &>> $GPA_REDIRECT
+
+  # hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/libcudart.so.12.1.105 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /usr/local/cuda-12.1/targets/x86_64-linux/lib/libcudart.so.12.1.55 &>> $GPA_REDIRECT
+  
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/python3.11/site-packages/torch/lib/libtorch_python.so &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/python3.11/site-packages/torch/lib/libc10_cuda.so &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/libomp.so &>> $GPA_REDIRECT
+
+  hpcstruct -j $GPA_THREADS /usr/local/cuda-12.1/targets/x86_64-linux/lib/libcudnn.so.9.7.0 &>> $GPA_REDIRECT
+
+  # hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/python3.11/site-packages/torch/lib/libcudnn_graph.so.9 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /usr/local/cuda-12.1/targets/x86_64-linux/lib/libcudnn_graph.so.9.7.0 &>> $GPA_REDIRECT
+
+  # hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/python3.11/site-packages/torch/lib/libcudnn_engines_precompiled.so.9 &>> $GPA_REDIRECT
+  hpcstruct -j $GPA_THREADS /usr/local/cuda-12.1/targets/x86_64-linux/lib/libcudnn_engines_precompiled.so.9.7.0 &>> $GPA_REDIRECT
+
+  # hpcstruct -j $GPA_THREADS /home/$USER_NAME/anaconda3/envs/$CONDA_ENV/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so &>>$GPA_REDIRECT
+cd ../..
 # time hpcstruct -j $GPA_THREADS $GPA_EXEC -o $GPA_EXEC".hpcstruct" &>>$GPA_REDIRECT
 
 echo "Analyzing: match metrics with advice"
 # hpcprof --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
 
-# hpcstruct /home/xjding/anaconda3/envs/new_torch_monitor/lib/python3.11/site-packages/torch/lib/libc10.so
-time hpcprof --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
-# time hpcprof -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libc10_cuda.so.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libcuda.so.535.183.01.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libcudart.so.11.0.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libcudart.so.12.1.55.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libhpcrun.so.0.0.0.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libmonitor.so.0.0.0.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libsanitizer-public.so.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/libtorch_cuda.so.hpcstruct -S /home/xjding/Projects/new_DrGPUM/DrGPUM/torch-monitor/test/python3.11.hpcstruct --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
+
+# time hpcprof --gpu-arch $GPA_ARCH -S $GPA_EXEC".hpcstruct" -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
+time hpcprof --gpu-arch $GPA_ARCH -o $DATABASE $MEASUREMENTS &>>$GPA_REDIRECT
 
 echo "Output advice in "$DATABASE"/gpa.advice"
 

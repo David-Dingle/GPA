@@ -74,6 +74,7 @@ cd build
 ../configure --prefix=$DIR/hpctoolkit --with-cuda=$CUDA_PATH \
   --with-torch-monitor=$DIR/torch-monitor/usr/local \
   --with-cupti=$CUPTI_PATH --with-spack=$SPACK_DIR --enable-develop
+  # --with-cupti=$CUPTI_PATH --with-spack=$SPACK_DIR
 # make install -j8
 make install -j8 &> log.txt
 
