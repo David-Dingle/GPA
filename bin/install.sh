@@ -30,12 +30,16 @@ cd $DIR
 # Install spack
 if [ -z $SPACK_DIR ]; then
   git clone https://github.com/spack/spack.git
+  cd spack
+  git checkout 12866eb0d6fc0bc5ecc9ef0648e0b9144f5267b0  # 6812713
+  cd ../
   export SPACK_ROOT=$(pwd)/spack
   export PATH=${SPACK_ROOT}/bin:${PATH}
   source ${SPACK_ROOT}/share/spack/setup-env.sh
 
   # Install hpctoolkit dependencies
   # spack install --only dependencies hpctoolkit ^dyninst@master ^binutils@2.34+libiberty~nls
+  spack clean -m
   spack install --only dependencies hpctoolkit@2021.05.15 ^dyninst@12.3.0 ^binutils@2.35+libiberty~nls # ^boost@1.83.0 ^libtool@2.4.6
   spack install libmonitor@master+dlopen+hpctoolkit
   # spack install mbedtls gotcha
@@ -52,6 +56,7 @@ CUDA_PATH=/usr/local/cuda/
 CUPTI_PATH=$CUDA_PATH/extras/CUPTI/
 
 # Python version for torch monitor
+# PY_VERSION=3.11
 PY_VERSION=3.11
 spack install python@$PY_VERSION
 
@@ -69,6 +74,7 @@ cd build
 ../configure --prefix=$DIR/hpctoolkit --with-cuda=$CUDA_PATH \
   --with-torch-monitor=$DIR/torch-monitor/usr/local \
   --with-cupti=$CUPTI_PATH --with-spack=$SPACK_DIR --enable-develop
+  # --with-cupti=$CUPTI_PATH --with-spack=$SPACK_DIR
 # make install -j8
 make install -j8 &> log.txt
 
